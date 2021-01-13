@@ -1,3 +1,12 @@
+
 .vscode/
 *.exe
 *.o
+CMakeCache.txt
+CMakeFiles
+CMakeLists.txt
+*.cmake
+Makefile
+Testing
+./Release/
+./Debug/

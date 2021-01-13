@@ -44,15 +44,17 @@ public:
 
     constexpr QFloat operator*(QFloat that) const {
         auto rawValue = static_cast<OverflowType>(value) * that.value;
+
         if constexpr (round) {
             rawValue += (1 << (q - 1));
         }
+        
         if constexpr (saturate) {
             constexpr auto min = std::numeric_limits<Type>::min();
             constexpr auto max = std::numeric_limits<Type>::max();
-            if (rawValue < (min << q)) {
+            if ((rawValue >> q) < min) {
                 return QFloat(min, nullptr);
-            } else if (rawValue > (max << q)) {
+            } else if ((rawValue >> q) > max) {
                 return QFloat(max, nullptr);
             }
         }
@@ -60,8 +62,31 @@ public:
         return QFloat(rawValue >> q, nullptr);
     }
 
+    constexpr QFloat operator/(QFloat that) const {
+        auto lhs = (static_cast<OverflowType>(value) << q);
+        auto rhs = that.value;
+
+        auto rawValue = lhs / rhs;
+        
+        if constexpr (saturate) {
+            constexpr auto min = std::numeric_limits<Type>::min();
+            constexpr auto max = std::numeric_limits<Type>::max();
+            if (rawValue < min) {
+                return QFloat(min, nullptr);
+            } else if (rawValue > max) {
+                return QFloat(max, nullptr);
+            }
+        }
+
+        return QFloat(rawValue, nullptr);
+    }
+
     constexpr QFloat operator*(auto that) const {
         return this->operator*(static_cast<QFloat>(that));
+    }
+
+    constexpr QFloat operator/(auto that) const {
+        return this->operator/(static_cast<QFloat>(that));
     }
 
     constexpr auto getRaw() const {
@@ -75,6 +100,11 @@ private:
 template<std::signed_integral _Type, std::signed_integral _OverflowType, int _q, bool _round, bool _saturate>
 constexpr auto operator*(auto lhs, QFloat<_Type, _OverflowType, _q, _round, _saturate> rhs) {
     return QFloat<_Type, _OverflowType, _q, _round, _saturate>(lhs) * rhs;
+}
+
+template<std::signed_integral _Type, std::signed_integral _OverflowType, int _q, bool _round, bool _saturate>
+constexpr auto operator/(auto lhs, QFloat<_Type, _OverflowType, _q, _round, _saturate> rhs) {
+    return QFloat<_Type, _OverflowType, _q, _round, _saturate>(lhs) / rhs;
 }
 
 #endif /* __QMATH_HPP_INCLUDED__ */
