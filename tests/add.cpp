@@ -3,7 +3,7 @@
 
 using qfloat8_t = QFloat<int16_t, int32_t, 8, true, true>;
 
-TEST(Divide, OneBitPrecision) {
+TEST(Add, OneBitPrecision) {
     for (auto l = 1; l <= 0xffff; ++l) {
         for (auto r = 1; r <= 0xffff; ++r) {
             auto li = static_cast<int16_t>(l);
@@ -13,10 +13,14 @@ TEST(Divide, OneBitPrecision) {
             auto lf = float(lq);
             auto rf = float(rq);
 
-            auto resultFloat = std::max(std::min(lf / rf, 128.f - (1.f / 256)), -128.f);
-            auto resultQ = lq / rq;
+            auto resultFloat = std::max(std::min(lf + rf, 128.f - (1.f / 256)), -128.f);
+            auto resultQ = lq + rq;
             auto diff = std::abs(float(resultFloat) - float(resultQ));
+            if (diff >= (1.f / 256)) {
+                printf("%04x %04x %04x (%g)", lq.getRaw(), rq.getRaw(), resultQ.getRaw(), resultFloat);
+            }
             ASSERT_LE(diff, 1.f / 256);
         }
     }
+    \
 }
